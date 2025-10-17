@@ -196,8 +196,8 @@ const Index = () => {
               <span className="text-primary">Измените будущее</span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-              Погрузитесь в мир искусственного интеллекта с лучшими экспертами.
-              Практические навыки, которые меняют карьеры.
+              Нейронные сети в скором времени заменят людей в большинстве гуманитарных профессий. 
+              Чем раньше вы познакомитесь с технологиями ИИ, тем быстрее адаптируетесь к будущему.
             </p>
             <div className="flex gap-4 justify-center">
               <Button size="lg" className="neon-glow text-lg px-8">
