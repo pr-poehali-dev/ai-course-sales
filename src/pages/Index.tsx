@@ -435,7 +435,7 @@ const Index = () => {
                 </li>
                 <li className="flex items-center gap-2">
                   <Icon name="Phone" size={16} />
-                  +7 (495) 123-45-67
+                  +7 (989) 509-18-25
                 </li>
               </ul>
             </div>
