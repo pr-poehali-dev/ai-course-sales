@@ -1,13 +1,38 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 
 const Index = () => {
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [levelFilter, setLevelFilter] = useState<string>('Все');
+  const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setVisibleSections((prev) => new Set([...prev, entry.target.id]));
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    const sections = document.querySelectorAll('section[id]');
+    sections.forEach((section) => observer.observe(section));
+
+    return () => {
+      sections.forEach((section) => observer.unobserve(section));
+    };
+  }, []);
 
   const courses = [
     {
@@ -41,6 +66,20 @@ const Index = () => {
       demoUrl: 'https://youtube.com/watch?v=demo3'
     }
   ];
+
+  const filteredCourses = levelFilter === 'Все' 
+    ? courses 
+    : courses.filter(course => course.level === levelFilter);
+
+  const NavLinks = ({ onClick }: { onClick?: () => void }) => (
+    <>
+      <a href="#courses" className="hover:text-primary transition-colors" onClick={onClick}>Курсы</a>
+      <a href="#teachers" className="hover:text-primary transition-colors" onClick={onClick}>Преподаватели</a>
+      <a href="#reviews" className="hover:text-primary transition-colors" onClick={onClick}>Отзывы</a>
+      <a href="#pricing" className="hover:text-primary transition-colors" onClick={onClick}>Тарифы</a>
+      <a href="#faq" className="hover:text-primary transition-colors" onClick={onClick}>FAQ</a>
+    </>
+  );
 
   const teachers = [
     {
@@ -129,13 +168,22 @@ const Index = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold neon-text">AI ACADEMY</h1>
           <div className="hidden md:flex items-center gap-6">
-            <a href="#courses" className="hover:text-primary transition-colors">Курсы</a>
-            <a href="#teachers" className="hover:text-primary transition-colors">Преподаватели</a>
-            <a href="#reviews" className="hover:text-primary transition-colors">Отзывы</a>
-            <a href="#pricing" className="hover:text-primary transition-colors">Тарифы</a>
-            <a href="#faq" className="hover:text-primary transition-colors">FAQ</a>
+            <NavLinks />
             <Button className="neon-glow">Войти</Button>
           </div>
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild className="md:hidden">
+              <Button variant="ghost" size="icon">
+                <Icon name="Menu" size={24} />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="bg-background/95 backdrop-blur-xl border-primary/20">
+              <div className="flex flex-col gap-6 mt-8">
+                <NavLinks onClick={() => setMobileMenuOpen(false)} />
+                <Button className="neon-glow w-full">Войти</Button>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </nav>
 
@@ -166,15 +214,25 @@ const Index = () => {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-3xl animate-pulse-glow" />
       </section>
 
-      <section id="courses" className="py-20">
+      <section id="courses" className={`py-20 transition-all duration-700 ${visibleSections.has('courses') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <Badge className="mb-4 bg-secondary/20 text-secondary border-secondary/50">Наши курсы</Badge>
             <h2 className="text-4xl font-bold mb-4">Выберите свой путь</h2>
             <p className="text-muted-foreground">От новичка до эксперта ИИ</p>
           </div>
+          <div className="flex justify-center mb-8">
+            <Tabs value={levelFilter} onValueChange={setLevelFilter} className="w-auto">
+              <TabsList className="bg-card/50 border border-primary/20">
+                <TabsTrigger value="Все" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Все курсы</TabsTrigger>
+                <TabsTrigger value="Начальный" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Начальный</TabsTrigger>
+                <TabsTrigger value="Средний" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Средний</TabsTrigger>
+                <TabsTrigger value="Продвинутый" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Продвинутый</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
           <div className="grid md:grid-cols-3 gap-8">
-            {courses.map((course) => (
+            {filteredCourses.map((course) => (
               <Card key={course.id} className="group hover:border-primary/50 transition-all duration-300 bg-card/50 backdrop-blur overflow-hidden">
                 <div className="relative overflow-hidden">
                   <img 
@@ -234,7 +292,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="teachers" className="py-20 bg-card/30">
+      <section id="teachers" className={`py-20 bg-card/30 transition-all duration-700 ${visibleSections.has('teachers') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <Badge className="mb-4 bg-accent/20 text-accent border-accent/50">Эксперты</Badge>
@@ -260,7 +318,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="reviews" className="py-20">
+      <section id="reviews" className={`py-20 transition-all duration-700 ${visibleSections.has('reviews') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <Badge className="mb-4 bg-primary/20 text-primary border-primary/50">Отзывы</Badge>
@@ -288,7 +346,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="pricing" className="py-20 bg-card/30">
+      <section id="pricing" className={`py-20 bg-card/30 transition-all duration-700 ${visibleSections.has('pricing') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <Badge className="mb-4 bg-secondary/20 text-secondary border-secondary/50">Тарифы</Badge>
@@ -323,7 +381,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="faq" className="py-20">
+      <section id="faq" className={`py-20 transition-all duration-700 ${visibleSections.has('faq') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
         <div className="container mx-auto px-4 max-w-3xl">
           <div className="text-center mb-12">
             <Badge className="mb-4 bg-accent/20 text-accent border-accent/50">FAQ</Badge>
